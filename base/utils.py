@@ -5,22 +5,26 @@ def generate_attendance_for_group(group_id):
     try:
         group = Group.objects.get(id=group_id)
         students = Student.objects.filter(group=group)
-        
+
         start_date = group.start_date
         end_date = group.end_date
 
-        bugun = date.today()
-        juft_hafta_kunlari = {0, 2, 4}
-        toq_hafta_kunlari = {1, 3, 5}
+        bugun = start_date
 
-        if bugun.weekday() in juft_hafta_kunlari:
-            tanlangan_kunlar = juft_hafta_kunlari
-        else:
-            tanlangan_kunlar = toq_hafta_kunlari
+        even_days = {0, 2, 4}
+        odd_days = {1, 3, 5}
+
+        choosed_days = even_days if start_date.weekday() in even_days else odd_days
+
+        ignored_dates = {(1, 1), (3, 21)}
+
+        ignored_weekdays = {6}
 
         sana = start_date
         while sana <= end_date:
-            if sana.weekday() in tanlangan_kunlar:
+            if (sana.weekday() in choosed_days
+                and (sana.month, sana.day) not in ignored_dates 
+                and sana.weekday() not in ignored_weekdays):
                 for student in students:
                     Attendance.objects.get_or_create(student=student, date=sana)
             sana += timedelta(days=1)
