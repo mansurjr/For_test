@@ -86,7 +86,7 @@ DATABASES = {
         'USER': getenv('USER'), 
         'PASSWORD': getenv('PASSWORD'),
         'HOST': getenv('HOST'), 
-        'PORT': int(getenv('PORT')),
+        'PORT': getenv('PORT'),
     }
 }
 
