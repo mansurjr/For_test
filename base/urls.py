@@ -1,12 +1,16 @@
 from django.urls import path
-from .views import login_view, logout_view, dashboard, group_details,update_attendance
-from django.conf import settings
-
+from rest_framework_simplejwt.views import TokenRefreshView
+from .views import (
+    login_view, logout_view, dashboard, group_details, 
+    update_attendance, user_info
+)
 
 urlpatterns = [
-    path("", login_view, name="login"),
+    path("login/", login_view, name="login"),
     path("logout/", logout_view, name="logout"),
     path("dashboard/", dashboard, name="dashboard"),
     path("group/<int:group_id>/", group_details, name="group_details"),
-    path("update_attendence/", update_attendance, name='update_attendance'),
+    path("update_attendance/", update_attendance, name="update_attendance"),
+    path("user_info/", user_info, name="user_info"),
+    path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
 ]
