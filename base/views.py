@@ -1,12 +1,11 @@
 from django.shortcuts import get_object_or_404
-from django.utils.timezone import now, localtime
 from django.contrib.auth import login, logout
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
-from .models import Teacher, Group, Student, Attendance
+from .models import Staffs, Group, Student, Attendance
 from datetime import datetime
 
 @api_view(["POST"])
@@ -16,7 +15,7 @@ def login_view(request):
     password = data.get("password", "").strip()
 
     try:
-        teacher = Teacher.objects.get(username=username)
+        teacher = Staffs.objects.get(username=username, position="Teacher")
 
         if not teacher.is_active:
             return Response(
@@ -39,7 +38,7 @@ def login_view(request):
                 "refresh_token": str(refresh)
             })
 
-    except Teacher.DoesNotExist:
+    except Staffs.DoesNotExist:
         return Response({"status": "error", "message": "Invalid username or password"}, status=status.HTTP_401_UNAUTHORIZED)
 
 
@@ -54,11 +53,15 @@ def logout_view(request):
 @permission_classes([IsAuthenticated])
 def dashboard(request):
     teacher = request.user
-    groups = [{"id": group.id, "name": group.name} for group in teacher.teacher_groups.all()]
+
+    if teacher.position != "Teacher":
+        return Response({"status": "error", "message": "Access denied"}, status=status.HTTP_403_FORBIDDEN)
+
+    groups = [{"id": group.id, "name": group.name} for group in teacher.group_set.all()]
 
     return Response({
-        "status": "success", 
-        "teacher": {"id": teacher.id, "name": teacher.full_name, "last_login": teacher.last_login}, 
+        "status": "success",
+        "teacher": {"id": teacher.id, "name": teacher.username, "last_login": teacher.last_login}, 
         "groups": groups
     })
 
@@ -69,12 +72,12 @@ def group_details(request, group_id):
     group = get_object_or_404(Group, id=group_id)
 
     students = [
-        {"id": student.id, "full_name": student.full_name, "unique_id": student.unique_id}
-        for student in group.students.all()
+        {"id": student.id, "full_name": f"{student.name} {student.surname}", "unique_id": student.unique_id}
+        for student in group.student_set.all()
     ]
 
     attendances = [
-        {"id": attendance.id, "student_id": attendance.student.id, "date": attendance.date, "status": attendance.status}
+        {"id": attendance.id, "student_id": attendance.student.id, "date": str(attendance.date), "status": attendance.status}
         for attendance in Attendance.objects.filter(student__group=group).select_related('student')
     ]
 
@@ -114,11 +117,14 @@ def update_attendance(request):
 def user_info(request):
     teacher = request.user
 
+    if teacher.position != "Teacher":
+        return Response({"status": "error", "message": "Access denied"}, status=status.HTTP_403_FORBIDDEN)
+
     return Response({
         "status": "success",
         "teacher": {
             "id": teacher.id,
-            "full_name": teacher.full_name,
+            "full_name": teacher.username,
             "username": teacher.username,
             "last_login": teacher.last_login,
         }

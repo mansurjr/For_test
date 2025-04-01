@@ -1,14 +1,14 @@
 from django.contrib import admin
 from import_export.admin import ExportMixin
 from import_export import resources
-from .models import Teacher, Group, Student, Attendance
+from .models import Staffs, Group, Student, Attendance
 from .utils import generate_attendance_for_group
 from django import forms
 from dateutil.relativedelta import relativedelta
 
 class TeacherResource(resources.ModelResource):
     class Meta:
-        model = Teacher
+        model = Staffs
 
 class GroupResource(resources.ModelResource):
     class Meta:
@@ -22,26 +22,26 @@ class AttendanceResource(resources.ModelResource):
     class Meta:
         model = Attendance
 
-@admin.register(Teacher)
+@admin.register(Staffs)
 class TeacherAdmin(ExportMixin, admin.ModelAdmin):
     resource_class = TeacherResource
-    list_display = ("full_name", "username", "is_active", "last_login")
-    list_filter = ("is_active",)
-    search_fields = ("full_name", "username")
+    list_display = ("username", "phone_number", "position", "is_active", "last_login")
+    list_filter = ("is_active", "position")
+    search_fields = ("username", "phone_number")
     readonly_fields = ("last_login",)
 
 @admin.register(Student)
 class StudentAdmin(ExportMixin, admin.ModelAdmin):
     resource_class = StudentResource
-    list_display = ("full_name", "unique_id", "group")
-    search_fields = ("full_name", "unique_id")
+    list_display = ("name", "surname", "unique_id", "group")
+    search_fields = ("name", "surname", "unique_id")
 
 @admin.register(Attendance)
 class AttendanceAdmin(ExportMixin, admin.ModelAdmin):
     resource_class = AttendanceResource
     list_display = ("student", "date", "status")
     list_editable = ("status",)
-    search_fields = ("student__full_name", "student__group__name")
+    search_fields = ("student__name", "student__surname", "student__group__name")
 
 class GroupForm(forms.ModelForm):
     DURATION_CHOICES = [
@@ -55,7 +55,7 @@ class GroupForm(forms.ModelForm):
 
     class Meta:
         model = Group
-        fields = ("name", "start_date", "lesson_starts", "teacher")
+        fields = ("name", "start_date", "lesson_start_time", "teacher")
 
     def clean(self):
         cleaned_data = super().clean()
@@ -80,12 +80,13 @@ class GroupForm(forms.ModelForm):
             instance.save()
         return instance
 
+@admin.register(Group)
 class GroupAdmin(ExportMixin, admin.ModelAdmin):
     form = GroupForm  
-    list_display = ("name", "start_date", "end_date", "lesson_starts", "teacher")
+    list_display = ("name", "start_date", "end_date", "lesson_start_time", "teacher")
     actions = ["generate_attendance"]
     list_editable = ("teacher",)
-    search_fields = ("name", "teacher__full_name")
+    search_fields = ("name", "teacher__username")
 
     def generate_attendance(self, request, queryset):
         for group in queryset:
@@ -93,5 +94,3 @@ class GroupAdmin(ExportMixin, admin.ModelAdmin):
         self.message_user(request, "Attendance records created successfully!")
 
     generate_attendance.short_description = "Generate attendance for selected groups"
-
-admin.site.register(Group, GroupAdmin)

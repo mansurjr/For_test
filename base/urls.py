@@ -6,7 +6,7 @@ from .views import (
 )
 
 urlpatterns = [
-    path("login/", login_view, name="login"),
+    path("", login_view, name="login"),
     path("logout/", logout_view, name="logout"),
     path("dashboard/", dashboard, name="dashboard"),
     path("group/<int:group_id>/", group_details, name="group_details"),
