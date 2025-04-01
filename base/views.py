@@ -1,5 +1,6 @@
 from django.shortcuts import get_object_or_404
-from django.contrib.auth import login, logout
+from django.contrib.auth import authenticate, login, logout
+from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -8,45 +9,51 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from .models import Staffs, Group, Student, Attendance
 from datetime import datetime
 
+@csrf_exempt  # ✅ Fix CSRF Issue for Login View
 @api_view(["POST"])
 def login_view(request):
     data = request.data
     username = data.get("username", "").strip()
     password = data.get("password", "").strip()
 
-    try:
-        teacher = Staffs.objects.get(username=username, position="Teacher")
+    teacher = authenticate(username=username, password=password)  # ✅ Use authenticate()
 
-        if not teacher.is_active:
-            return Response(
-                {"status": "error", "message": "Your account is inactive. Please contact support."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-
-        if teacher.check_password(password):
-            teacher.last_login = datetime.now()
-            teacher.save(update_fields=["last_login"])
-
-            refresh = RefreshToken.for_user(teacher)
-            login(request, teacher)
-
-            return Response({
-                "status": "success",
-                "message": "Login successful",
-                "teacher_id": teacher.id,
-                "access_token": str(refresh.access_token),
-                "refresh_token": str(refresh)
-            })
-
-    except Staffs.DoesNotExist:
+    if teacher is None or teacher.position != "Teacher":
         return Response({"status": "error", "message": "Invalid username or password"}, status=status.HTTP_401_UNAUTHORIZED)
+
+    if not teacher.is_active:
+        return Response(
+            {"status": "error", "message": "Your account is inactive. Please contact support."},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    teacher.last_login = datetime.now()
+    teacher.save(update_fields=["last_login"])
+
+    refresh = RefreshToken.for_user(teacher)
+    login(request, teacher)
+
+    return Response({
+        "status": "success",
+        "message": "Login successful",
+        "teacher_id": teacher.id,
+        "access_token": str(refresh.access_token),
+        "refresh_token": str(refresh)
+    })
 
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def logout_view(request):
-    logout(request)
-    return Response({"status": "success", "message": "Logged out successfully"})
+    try:
+        refresh_token = request.data.get("refresh_token")  # ✅ Get refresh token from request
+        if refresh_token:
+            token = RefreshToken(refresh_token)
+            token.blacklist()  # ✅ Blacklist refresh token to prevent reuse
+        logout(request)
+        return Response({"status": "success", "message": "Logged out successfully"})
+    except Exception as e:
+        return Response({"status": "error", "message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(["GET"])
@@ -78,7 +85,7 @@ def group_details(request, group_id):
 
     attendances = [
         {"id": attendance.id, "student_id": attendance.student.id, "date": str(attendance.date), "status": attendance.status}
-        for attendance in Attendance.objects.filter(student__group=group).select_related('student')
+        for attendance in Attendance.objects.filter(student__group_id=group.id).select_related('student')  # ✅ Fix query
     ]
 
     return Response({
