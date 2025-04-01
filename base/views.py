@@ -1,5 +1,7 @@
+from django.db import models
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import login, logout
+from django.contrib.auth.hashers import check_password
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -7,6 +9,9 @@ from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 from .models import Staffs, Group, Student, Attendance
 from datetime import datetime
+import logging
+
+logger = logging.getLogger(__name__)
 
 @api_view(["POST"])
 def login_view(request):
@@ -14,33 +19,54 @@ def login_view(request):
     username = data.get("username", "").strip()
     password = data.get("password", "").strip()
 
+    logger.debug(f"Login attempt for username: {username}")
+
     try:
-        teacher = Staffs.objects.get(username=username, position="Teacher")
+        user = Staffs.objects.get(username=username)
+        logger.debug(f"User found: {user.username}")
 
-        if not teacher.is_active:
-            return Response(
-                {"status": "error", "message": "Your account is inactive. Please contact support."},
-                status=status.HTTP_403_FORBIDDEN
-            )
+        if not user.is_active:
+            return Response({"status": "error", "message": "Your account is inactive. Please contact support."},
+                            status=status.HTTP_403_FORBIDDEN)
 
-        if teacher.check_password(password):
-            teacher.last_login = datetime.now()
-            teacher.save(update_fields=["last_login"])
+        if check_password(password, user.password):
+            user.last_login = datetime.now()
+            user.save(update_fields=["last_login"])
 
-            refresh = RefreshToken.for_user(teacher)
-            login(request, teacher)
+            refresh = RefreshToken.for_user(user)
 
-            return Response({
-                "status": "success",
-                "message": "Login successful",
-                "teacher_id": teacher.id,
-                "access_token": str(refresh.access_token),
-                "refresh_token": str(refresh)
-            })
+            if user.position == 'CEO':
+                teacher_ids = Staffs.objects.filter(position="Teacher").values_list('id', flat=True)
+                return Response({
+                    "status": "success",
+                    "message": "Login successful",
+                    "access_token": str(refresh.access_token),
+                    "refresh_token": str(refresh),
+                    "teacher_ids": list(teacher_ids)
+                })
+            elif user.position == 'Teacher':
+                return Response({
+                    "status": "success",
+                    "message": "Login successful",
+                    "access_token": str(refresh.access_token),
+                    "refresh_token": str(refresh),
+                    "teacher_id": user.id
+                })
+            else:
+                return Response({"status": "error", "message": "Invalid role."}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            logger.error("Invalid password")
+            return Response({"status": "error", "message": "Invalid username or password"},
+                            status=status.HTTP_401_UNAUTHORIZED)
 
     except Staffs.DoesNotExist:
-        return Response({"status": "error", "message": "Invalid username or password"}, status=status.HTTP_401_UNAUTHORIZED)
-
+        logger.error(f"User not found for username: {username}")
+        return Response({"status": "error", "message": "Invalid username or password"},
+                        status=status.HTTP_401_UNAUTHORIZED)
+    except Exception as e:
+        logger.error(f"Unexpected error: {str(e)}")
+        return Response({"status": "error", "message": "Unexpected error occurred"},
+                        status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
@@ -48,23 +74,27 @@ def logout_view(request):
     logout(request)
     return Response({"status": "success", "message": "Logged out successfully"})
 
-
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def dashboard(request):
-    teacher = request.user
+    user = get_object_or_404(Staffs, id=request.user.id)
 
-    if teacher.position != "Teacher":
+    if user.position == "Teacher":
+        groups = [{"id": group.id, "name": group.name} for group in Group.objects.filter(teacher=user)]
+
+        return Response({
+            "status": "success",
+            "teacher": {"id": user.id, "name": user.username, "last_login": user.last_login},
+            "groups": groups
+        })
+    elif user.position == "CEO":
+        teachers = Staffs.objects.filter(position="Teacher").values("id", "username", "last_login")
+        return Response({
+            "status": "success",
+            "teachers": list(teachers)
+        })
+    else:
         return Response({"status": "error", "message": "Access denied"}, status=status.HTTP_403_FORBIDDEN)
-
-    groups = [{"id": group.id, "name": group.name} for group in teacher.group_set.all()]
-
-    return Response({
-        "status": "success",
-        "teacher": {"id": teacher.id, "name": teacher.username, "last_login": teacher.last_login}, 
-        "groups": groups
-    })
-
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
@@ -72,9 +102,9 @@ def group_details(request, group_id):
     group = get_object_or_404(Group, id=group_id)
 
     students = [
-        {"id": student.id, "full_name": f"{student.name} {student.surname}", "unique_id": student.unique_id}
-        for student in group.student_set.all()
-    ]
+    {"id": student.id, "full_name": f"{student.name} {student.surname}", "unique_id": student.unique_id}
+    for student in group.students.all()
+]
 
     attendances = [
         {"id": attendance.id, "student_id": attendance.student.id, "date": str(attendance.date), "status": attendance.status}
@@ -82,23 +112,41 @@ def group_details(request, group_id):
     ]
 
     return Response({
-        "status": "success", 
-        "group": {"id": group.id, "name": group.name}, 
-        "students": students, 
+        "status": "success",
+        "group": {"id": group.id, "name": group.name},
+        "students": students,
         "attendances": attendances
     })
 
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def user_info(request):
+    user = get_object_or_404(Staffs, id=request.user.id)
+
+    if user.position != "Teacher":
+        return Response({"status": "error", "message": "Access denied"}, status=status.HTTP_403_FORBIDDEN)
+
+    return Response({
+        "status": "success",
+        "teacher": {
+            "id": user.id,
+            "full_name": user.username,
+            "username": user.username,
+            "last_login": user.last_login,
+        }
+    })
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def update_attendance(request):
-    data = request.data 
+    data = request.data
     student_id = data.get("student_id")
     date = data.get("date")
     status_value = data.get("status")
 
     if not student_id or not date or not status_value:
-        return Response({"status": "error", "message": "Invalid data"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"status": "error", "message": "Invalid data"},
+                        status=status.HTTP_400_BAD_REQUEST)
 
     student = get_object_or_404(Student, id=student_id)
 
@@ -110,22 +158,3 @@ def update_attendance(request):
     message = "Attendance updated" if not created else "Attendance recorded"
 
     return Response({"status": "success", "message": message, "attendance_id": attendance.id})
-
-
-@api_view(["GET"])
-@permission_classes([IsAuthenticated])
-def user_info(request):
-    teacher = request.user
-
-    if teacher.position != "Teacher":
-        return Response({"status": "error", "message": "Access denied"}, status=status.HTTP_403_FORBIDDEN)
-
-    return Response({
-        "status": "success",
-        "teacher": {
-            "id": teacher.id,
-            "full_name": teacher.username,
-            "username": teacher.username,
-            "last_login": teacher.last_login,
-        }
-    })

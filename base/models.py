@@ -28,6 +28,7 @@ class Group(models.Model):
         return self.name
 
 
+
 class Student(models.Model):
     name = models.CharField(max_length=255)
     surname = models.CharField(max_length=255)
@@ -58,7 +59,7 @@ class Attendance(models.Model):
 
     student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name="attendances")
     date = models.DateField()
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default="Absent")
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default="NULL")
 
     class Meta:
         unique_together = ("student", "date")
