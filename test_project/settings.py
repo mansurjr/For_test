@@ -118,6 +118,11 @@ CSRF_COOKIE_SECURE = not DEBUG
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 
+CORS_ALLOWED_ORIGINS = [
+    "https://3.123.17.103/",
+    "http://localhost:3000", 
+]
+
 AUTH_USER_MODEL = 'base.Staffs'
 
 SIMPLE_JWT = {

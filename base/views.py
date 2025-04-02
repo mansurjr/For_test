@@ -71,8 +71,16 @@ def login_view(request):
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def logout_view(request):
-    logout(request)
-    return Response({"status": "success", "message": "Logged out successfully"})
+    try:
+        refresh_token = request.data.get("refresh_token")
+        if refresh_token:
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+        
+        return Response({"status": "success", "message": "Logged out successfully"})
+    
+    except Exception as e:
+        return Response({"status": "error", "message": str(e)}, status=400)
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
