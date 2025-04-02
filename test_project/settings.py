@@ -111,16 +111,20 @@ SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 SESSION_COOKIE_SECURE = not DEBUG 
 
-CSRF_ALLOW_ALL_ORIGINS = True
+CSRF_TRUSTED_ORIGINS = [
+    "https://3.123.17.103",
+    "http://localhost:3000",
+]
+
 CSRF_COOKIE_NAME = "csrftoken"
 CSRF_COOKIE_SECURE = not DEBUG
 
-CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_ALL_ORIGINS = False 
 CORS_ALLOW_CREDENTIALS = True
 
 CORS_ALLOWED_ORIGINS = [
-    "https://3.123.17.103/",
-    "http://localhost:3000", 
+    "https://3.123.17.103",
+    "http://localhost:3000",
 ]
 
 AUTH_USER_MODEL = 'base.Staffs'
