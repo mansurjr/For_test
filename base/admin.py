@@ -6,7 +6,6 @@ from .utils import generate_attendance_for_group
 from django import forms
 from dateutil.relativedelta import relativedelta
 
-# Resources for import/export
 class TeacherResource(resources.ModelResource):
     class Meta:
         model = Staffs
@@ -23,7 +22,6 @@ class AttendanceResource(resources.ModelResource):
     class Meta:
         model = Attendance
 
-# Staff/Teacher Admin
 @admin.register(Staffs)
 class TeacherAdmin(ExportMixin, admin.ModelAdmin):
     resource_class = TeacherResource
@@ -38,7 +36,6 @@ class StudentAdmin(ExportMixin, admin.ModelAdmin):
     list_display = ("name", "surname", "unique_id", "group")
     search_fields = ("name", "surname", "unique_id")
 
-# Attendance Admin
 @admin.register(Attendance)
 class AttendanceAdmin(ExportMixin, admin.ModelAdmin):
     resource_class = AttendanceResource
@@ -83,19 +80,18 @@ class GroupForm(forms.ModelForm):
             instance.save()
         return instance
 
-# Group Admin with Multi-teacher support
 @admin.register(Group)
 class GroupAdmin(ExportMixin, admin.ModelAdmin):
     form = GroupForm  
     resource_class = GroupResource
-    list_display = ("name", "start_date", "end_date", "lesson_start_time", "teachers_display")  # Updated for teachers display
+    list_display = ("name", "start_date", "end_date", "lesson_start_time", "teacher_display")
     actions = ["generate_attendance"]
-    list_editable = ("lesson_start_time",)  # Editable lesson time, you can't edit 'teachers' directly in list
-    search_fields = ("name", "teachers__username")
+    list_editable = ("lesson_start_time",)
+    search_fields = ("name", "teacher__username")
 
-    def teachers_display(self, obj):
-        return ", ".join([teacher.username for teacher in obj.teachers.all()])  # Displaying teacher usernames
-    teachers_display.short_description = "Teachers"
+    def teacher_display(self, obj):
+        return obj.teacher.username if obj.teacher else "No Teacher"
+    teacher_display.short_description = "Teacher"
 
     def generate_attendance(self, request, queryset):
         for group in queryset:

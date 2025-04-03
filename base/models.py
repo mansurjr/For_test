@@ -22,7 +22,7 @@ class Group(models.Model):
     start_date = models.DateField()
     end_date = models.DateField(null=True, blank=True)
     lesson_start_time = models.TimeField()
-    teacher = models.ForeignKey(Staffs, on_delete=models.CASCADE, related_name="teacher_groups")
+    teacher = models.ForeignKey(Staffs, on_delete=models.CASCADE, related_name="teacher_groups", null=True, blank=True)
 
     def __str__(self):
         return self.name
@@ -59,10 +59,10 @@ class Attendance(models.Model):
 
     student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name="attendances")
     date = models.DateField()
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default="NULL")
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, null=True, blank=True)
 
     class Meta:
         unique_together = ("student", "date")
 
     def __str__(self):
-        return f"{self.student.name} {self.student.surname} - {self.date}: {self.status}"
+        return f"{self.student.name} {self.student.surname} - {self.date}: {self.status if self.status != 'NULL' else 'Not yet assigned'}"
