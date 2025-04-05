@@ -47,7 +47,7 @@ class GroupForm(forms.ModelForm):
     DURATION_CHOICES = [
         (1, "1 Month"),
         (3, "3 Months"),
-        (6, "6 Months"),
+        (5, "5 Months"),
         (8, "8 Months"),
     ]
 
