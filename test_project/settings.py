@@ -114,6 +114,8 @@ SESSION_COOKIE_SECURE = not DEBUG
 CSRF_TRUSTED_ORIGINS = [
     "https://3.123.17.103",
     "http://localhost:3000",
+    "http://localhost:5173",
+    "https://teens-crm.netlify.app"
 ]
 
 CSRF_COOKIE_NAME = "csrftoken"
@@ -125,7 +127,8 @@ CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
     "https://3.123.17.103",
     "http://localhost:3000",
-    "http://localhost:5173/",
+    "http://localhost:5173",
+    "https://teens-crm.netlify.app",
 ]
 
 AUTH_USER_MODEL = 'base.Staffs'
