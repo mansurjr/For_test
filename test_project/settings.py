@@ -125,6 +125,7 @@ CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
     "https://3.123.17.103",
     "http://localhost:3000",
+    "http://localhost:5173/",
 ]
 
 AUTH_USER_MODEL = 'base.Staffs'
