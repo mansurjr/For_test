@@ -55,7 +55,7 @@ class GroupForm(forms.ModelForm):
 
     class Meta:
         model = Group
-        fields = ("name", "start_date", "lesson_start_time", "teacher")
+        fields = ("name", "start_date", "lesson_start_time", "lesson_end_time", "teacher")
 
     def clean(self):
         cleaned_data = super().clean()
@@ -84,7 +84,7 @@ class GroupForm(forms.ModelForm):
 class GroupAdmin(ExportMixin, admin.ModelAdmin):
     form = GroupForm  
     resource_class = GroupResource
-    list_display = ("name", "start_date", "end_date", "lesson_start_time", "teacher_display")
+    list_display = ("name", "start_date", "end_date", "lesson_start_time", "lesson_end_time", "teacher_display")
     actions = ["generate_attendance"]
     list_editable = ("lesson_start_time",)
     search_fields = ("name", "teacher__username")
