@@ -22,6 +22,7 @@ class Group(models.Model):
     start_date = models.DateField()
     end_date = models.DateField(null=True, blank=True)
     lesson_start_time = models.TimeField()
+    lesson_end_time = models.TimeField()
     teacher = models.ForeignKey(Staffs, on_delete=models.CASCADE, related_name="teacher_groups", null=True, blank=True)
 
     def __str__(self):
