@@ -34,23 +34,26 @@ def login_view(request):
             user.save(update_fields=["last_login"])
 
             refresh = RefreshToken.for_user(user)
+            role = user.position
 
-            if user.position == 'CEO':
+            if role == 'CEO':
                 teacher_ids = Staffs.objects.filter(position="Teacher").values_list('id', flat=True)
                 return Response({
                     "status": "success",
                     "message": "Login successful",
                     "access_token": str(refresh.access_token),
                     "refresh_token": str(refresh),
-                    "teacher_ids": list(teacher_ids)
+                    "teacher_ids": list(teacher_ids),
+                    "role": role
                 })
-            elif user.position == 'Teacher':
+            elif role == 'Teacher':
                 return Response({
                     "status": "success",
                     "message": "Login successful",
                     "access_token": str(refresh.access_token),
                     "refresh_token": str(refresh),
-                    "teacher_id": user.id
+                    "teacher_id": user.id,
+                    "role": role
                 })
             else:
                 return Response({"status": "error", "message": "Invalid role."}, status=status.HTTP_400_BAD_REQUEST)
@@ -67,7 +70,6 @@ def login_view(request):
         logger.error(f"Unexpected error: {str(e)}")
         return Response({"status": "error", "message": "Unexpected error occurred"},
                         status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def logout_view(request):
@@ -76,9 +78,9 @@ def logout_view(request):
         if refresh_token:
             token = RefreshToken(refresh_token)
             token.blacklist()
-        
+
         return Response({"status": "success", "message": "Logged out successfully"})
-    
+
     except Exception as e:
         return Response({"status": "error", "message": str(e)}, status=400)
 
@@ -131,16 +133,14 @@ def group_details(request, group_id):
 def user_info(request):
     user = get_object_or_404(Staffs, id=request.user.id)
 
-    if user.position != "Teacher":
-        return Response({"status": "error", "message": "Access denied"}, status=status.HTTP_403_FORBIDDEN)
-
     return Response({
         "status": "success",
-        "teacher": {
+        "user": {
             "id": user.id,
             "full_name": user.username,
             "username": user.username,
             "last_login": user.last_login,
+            "role": user.position
         }
     })
 
