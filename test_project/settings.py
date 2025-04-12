@@ -2,8 +2,7 @@ from pathlib import Path
 import os
 from dotenv import load_dotenv
 from os import getenv
-from datetime import timedelta, datetime
-from django.utils.timezone import localtime
+from datetime import timedelta
 
 load_dotenv()
 
@@ -13,7 +12,7 @@ SECRET_KEY = getenv('SECRET_KEY', 'your-default-secret-key')
 
 DEBUG = getenv("DEBUG", "True") == "True"
 
-ALLOWED_HOSTS = ["*",]
+ALLOWED_HOSTS = ["*"]
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -22,7 +21,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
     'base.apps.BaseConfig',
+
     'import_export',
     'corsheaders',
     'rest_framework',
@@ -164,3 +165,6 @@ LOGGING = {
         },
     },
 }
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

@@ -10,7 +10,6 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from .models import Staffs, Group, Student, Attendance
 from datetime import datetime
 import logging
-
 logger = logging.getLogger(__name__)
 
 @api_view(["POST"])
@@ -137,16 +136,21 @@ def user_info(request):
         "status": "success",
         "user": {
             "id": user.id,
-            "full_name": user.username,
+            "name": user.first_name,
+            "surname": user.last_name,
             "username": user.username,
             "last_login": user.last_login,
-            "role": user.position
+            "role": user.position,
+            "email": user.email,
+            "user_profile_picture": user.profile_picture.url if user.profile_picture else None
         }
     })
+
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def update_attendance(request):
+
     data = request.data
     student_id = data.get("student_id")
     date = data.get("date")
@@ -166,3 +170,16 @@ def update_attendance(request):
     message = "Attendance updated" if not created else "Attendance recorded"
 
     return Response({"status": "success", "message": message, "attendance_id": attendance.id})
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def upload_profile_picture(request):
+    user = request.user
+
+    if 'profile_picture' in request.FILES:
+        user.profile_picture = request.FILES['profile_picture']
+        user.save()
+
+        return Response({"status": "success", "message": "Profile picture uploaded successfully"})
+
+    return Response({"status": "error", "message": "No file uploaded"}, status=400)
