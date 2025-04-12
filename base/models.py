@@ -1,8 +1,6 @@
 from django.db import models
 import random
 from django.contrib.auth.models import AbstractUser
-import cloudinary
-from cloudinary.models import CloudinaryField
 
 
 class Staffs(AbstractUser):
@@ -15,7 +13,7 @@ class Staffs(AbstractUser):
     phone_number = models.CharField(max_length=20, unique=True)
     position = models.CharField(max_length=15, choices=POSITION_CHOICES)
     profile_picture = models.ImageField(upload_to='profile_pics/', blank=True, null=True)
-    
+
     def __str__(self):
         return f"{self.username} - {self.position}"
 
