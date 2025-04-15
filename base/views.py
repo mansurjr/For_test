@@ -136,13 +136,11 @@ def user_info(request):
         "status": "success",
         "user": {
             "id": user.id,
-            "name": user.first_name,
-            "surname": user.last_name,
-            "username": user.username,
+            "full_name": user.first_name + user.surname,
             "last_login": user.last_login,
             "role": user.position,
             "email": user.email,
-            "user_profile_picture": user.profile_picture.url if user.profile_picture else None
+            "image": user.profile_picture.url if user.profile_picture else None
         }
     })
 
