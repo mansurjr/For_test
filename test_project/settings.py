@@ -12,7 +12,11 @@ SECRET_KEY = getenv('SECRET_KEY', 'your-default-secret-key')
 
 DEBUG = getenv("DEBUG", "True") == "True"
 
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = [
+    "3.123.17.103",
+    "api.teens.uz",
+    "teens.uz",
+]
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -104,32 +108,26 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 if not DEBUG:
     STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
-
 X_FRAME_OPTIONS = "DENY"
 
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
-SESSION_COOKIE_SECURE = not DEBUG 
-
-CSRF_TRUSTED_ORIGINS = [
-    "https://3.123.17.103",
-    "http://localhost:3000",
-    "http://localhost:5173",
-    "https://teens-crm.netlify.app"
-]
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
+SECURE_SSL_REDIRECT = not DEBUG
 
 CSRF_COOKIE_NAME = "csrftoken"
-CSRF_COOKIE_SECURE = not DEBUG
 
-CORS_ALLOW_ALL_ORIGINS = False 
+CSRF_TRUSTED_ORIGINS = [
+    "https://api.teens.uz",
+    "https://crm.teens.uz",
+]
+
+CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOW_CREDENTIALS = True
 
 CORS_ALLOWED_ORIGINS = [
-    "https://3.123.17.103",
-    "http://localhost:3000",
-    "http://localhost:5173",
-    "https://teens-crm.netlify.app",
+    "https://crm.teens.uz",
 ]
 
 AUTH_USER_MODEL = 'base.Staffs'
