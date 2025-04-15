@@ -136,7 +136,7 @@ def user_info(request):
         "status": "success",
         "user": {
             "id": user.id,
-            "full_name": user.first_name + user.surname,
+            "full_name": user.first_name + user.last_name,
             "last_login": user.last_login,
             "role": user.position,
             "email": user.email,
