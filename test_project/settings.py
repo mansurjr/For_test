@@ -16,6 +16,7 @@ ALLOWED_HOSTS = [
     "3.123.17.103",
     "api.teens.uz",
     "teens.uz",
+    "http://localhost:5173"
 ]
 
 INSTALLED_APPS = [
@@ -121,6 +122,7 @@ CSRF_COOKIE_NAME = "csrftoken"
 CSRF_TRUSTED_ORIGINS = [
     "https://api.teens.uz",
     "https://crm.teens.uz",
+    "http://localhost:5173"
 ]
 
 CORS_ALLOW_ALL_ORIGINS = False
@@ -128,12 +130,13 @@ CORS_ALLOW_CREDENTIALS = True
 
 CORS_ALLOWED_ORIGINS = [
     "https://crm.teens.uz",
+    "http://localhost:5173"
 ]
 
 AUTH_USER_MODEL = 'base.Staffs'
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(days=1),
+    "ACCESS_TOKEN_LIFETIME": timedelta(hours=1),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),  
     "ROTATE_REFRESH_TOKENS": False,
     "BLACKLIST_AFTER_ROTATION": True, 
