@@ -48,7 +48,7 @@ class GroupForm(forms.ModelForm):
         (1, "1 Month"),
         (3, "3 Months"),
         (5, "5 Months"),
-        (7, "7months"),
+        (7, "7 Months"),
         (8, "8 Months"),
     ]
 
@@ -87,7 +87,7 @@ class GroupAdmin(ExportMixin, admin.ModelAdmin):
     resource_class = GroupResource
     list_display = ("name", "start_date", "end_date", "lesson_start_time", "lesson_end_time", "teacher_display")
     actions = ["generate_attendance"]
-    list_editable = ("lesson_start_time",)
+    list_editable = ("lesson_start_time", "end_date")
     search_fields = ("name", "teacher__username")
 
     def teacher_display(self, obj):
