@@ -124,7 +124,9 @@ def group_details(request, group_id):
         "status": "success",
         "group": {"id": group.id, "name": group.name},
         "students": students,
-        "attendances": attendances
+        "attendances": attendances,
+        "lesson_ends" : group.lesson_end_time,
+        "lesson_starts" : group.lesson_start_time
     })
 
 @api_view(["GET"])
