@@ -122,7 +122,8 @@ CSRF_COOKIE_NAME = "csrftoken"
 CSRF_TRUSTED_ORIGINS = [
     "https://api.teens.uz",
     "https://crm.teens.uz",
-    "http://localhost:5173"
+    "http://localhost:5173",
+    "https://3.123.17.103",
 ]
 
 CORS_ALLOW_ALL_ORIGINS = False
