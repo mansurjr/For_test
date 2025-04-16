@@ -12,6 +12,6 @@ urlpatterns = [
     path("group/<int:group_id>/", group_details, name="group_details"),
     path("update_attendance/", update_attendance, name="update_attendance"),
     path("user_info/", user_info, name="user_info"),
-    path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
+    path("token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path('upload/', upload_profile_picture, name='upload_profile_picture'),
 ]
