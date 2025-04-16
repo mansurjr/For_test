@@ -48,6 +48,7 @@ class GroupForm(forms.ModelForm):
         (1, "1 Month"),
         (3, "3 Months"),
         (5, "5 Months"),
+        (7, "7months"),
         (8, "8 Months"),
     ]
 
