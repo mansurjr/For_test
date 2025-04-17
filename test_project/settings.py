@@ -13,10 +13,10 @@ SECRET_KEY = getenv('SECRET_KEY', 'your-default-secret-key')
 DEBUG = getenv("DEBUG", "True") == "True"
 
 ALLOWED_HOSTS = [
-    "3.123.17.103",
     "api.teens.uz",
     "teens.uz",
-    "http://localhost:5173"
+    "127.0.0.1",
+    "localhost"
 ]
 
 INSTALLED_APPS = [
@@ -124,6 +124,7 @@ CSRF_TRUSTED_ORIGINS = [
     "https://crm.teens.uz",
     "http://localhost:5173",
     "https://3.123.17.103",
+    "http://127.0.0.1:8000",
 ]
 
 CORS_ALLOW_ALL_ORIGINS = False
@@ -131,7 +132,9 @@ CORS_ALLOW_CREDENTIALS = True
 
 CORS_ALLOWED_ORIGINS = [
     "https://crm.teens.uz",
-    "http://localhost:5173"
+    "http://localhost:5173",
+    "http://127.0.0.1:8000",
+    "https://api.teens.uz"
 ]
 
 AUTH_USER_MODEL = 'base.Staffs'
